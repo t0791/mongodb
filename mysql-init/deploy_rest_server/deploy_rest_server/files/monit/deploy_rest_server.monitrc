@@ -1,0 +1,7 @@
+check process deploy_rest_server 
+  with pidfile /var/paas/sys/run/deploy_rest_server/deploy_rest_server.pid every 3 cycles
+  start program "/var/paas/jobs/deploy_rest_server/bin/deploy_rest_server_ctl start"
+  stop program "/var/paas/jobs/deploy_rest_server/bin/deploy_rest_server_ctl stop"
+  if failed host {{httpaddr}} port {{httpport}}
+    with timeout 30 seconds
+    then restart

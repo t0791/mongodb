@@ -1,0 +1,12 @@
+{
+    "image": [
+        {
+            "image_name": "ubuntu14.04",
+            "image_id": "9906ae5f-0e9c-4245-9b95-9cef76e0f60e"
+        },
+        {
+            "image_name": "paas_user_monit",
+            "image_id": "35286658-3808-460b-b554-69bf136de1eb"
+        }
+    ]
+}

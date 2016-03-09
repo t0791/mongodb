@@ -1,0 +1,267 @@
+{
+	"hbs_policy": {
+        "name": "health_check_policy", 
+        "enabled": true, 
+        "lifetime": 60, 
+        "binding": {
+            "tags":{
+	              "app_guid": "management",
+	              "node_id": "management",
+	              "instance_id": "management_host"
+            },
+		    "main_tag":"app_guid"
+        }
+    },
+	"default_policies":[
+		{
+		    "name": "cpu-loadavg",
+		    "enabled": true,
+		    "binding": {
+		        "tags":{
+		    		"app_guid": "service_mgr",
+		        	"node_id": "service_mgr_vm",
+		        	"instance_id": "service_mgr_vm_a4fb2"
+		    	},
+		    	"main_tag":"app_guid"
+		    },
+		    "rules": [
+		        {
+		            "name": "alarm",
+		            "cooldown": 10,
+		            "duration": 30,
+		            "conditions": [
+		                {
+		                    "metric_type": "cpu_usage",
+		                    "metric_operation": ">",
+		                    "metric_value": 80,
+		                    "window_time": 30,
+		                    "window_function": "mean"
+		                }
+		            ],
+		            "policy-flag": {
+		                "set-flag": [
+		                    "alarm-flag"
+		                ]
+		            },
+		            "actions": [
+		                {
+		                    "type": "send_alarm",
+		                    "parameters": {
+		                        "objectClass": "{ObjectClass}",
+		                        "eventType": 2,
+		                        "clearedType": "ADAC",
+		                        "eventId": 450003,
+		                        "eventName": "VMResourceOverload",
+		                        "perceivedSeverity": "Major",
+		                        "additionalInformation": "cpu_usage bigger than 80"
+		                    }
+		                }
+		            ]
+		        },
+		        {
+		            "name": "clear-alarm",
+		            "cooldown": 10,
+		            "duration": 30,
+		            "conditions": [
+		                {
+		                    "metric_type": "cpu_usage",
+		                    "metric_operation": "<",
+		                    "metric_value": 60,
+		                    "window_time": 30,
+		                    "window_function": "mean"
+		                }
+		            ],
+		            "policy-flag": {
+		                "pre-check-flag": [
+		                    "alarm-flag"
+		                ],
+		                "clear-flag": [
+		                    "alarm-flag"
+		                ]
+		            },
+		            "actions": [
+		                {
+		                    "type": "clear_alarm",
+		                    "parameters": {
+		                        "objectClass": "{ObjectClass}",
+		                        "eventType": 2,
+		                        "clearedType": "ADAC",
+		                        "eventId": 450003,
+		                        "eventName": "VMResourceOverload",
+		                        "perceivedSeverity": "Major",
+		                        "additionalInformation": "cpu_usage bigger than 80"
+		                    }
+		                }
+		            ]
+		        }
+		    ]
+		},
+		{
+		    "name": "mem-loadavg",
+		    "enabled": true,
+		    "binding": {
+		        "tags":{
+		    		"app_guid": "service_mgr",
+		        	"node_id": "service_mgr_vm",
+		        	"instance_id": "service_mgr_vm_a4fb2"
+		    	},
+		    	"main_tag":"app_guid"
+		    },
+		    "rules": [
+		        {
+		            "name": "alarm",
+		            "cooldown": 10,
+		            "duration": 30,
+		            "conditions": [
+		                {
+		                    "metric_type": "mem_usage",
+		                    "metric_operation": ">",
+		                    "metric_value": 80,
+		                    "window_time": 30,
+		                    "window_function": "mean"
+		                }
+		            ],
+		            "policy-flag": {
+		                "set-flag": [
+		                    "alarm-flag"
+		                ]
+		            },
+		            "actions": [
+		                {
+		                    "type": "send_alarm",
+		                    "parameters": {
+		                        "objectClass": "{ObjectClass}",
+		                        "eventType": 2,
+		                        "clearedType": "ADAC",
+		                        "eventId": 450003,
+		                        "eventName": "VMResourceOverload",
+		                        "perceivedSeverity": "Major",
+		                        "additionalInformation": "mem_usage bigger than 80"
+		                    }
+		                }
+		            ]
+		        },
+		        {
+		            "name": "clear-alarm",
+		            "cooldown": 10,
+		            "duration": 30,
+		            "conditions": [
+		                {
+		                    "metric_type": "mem_usage",
+		                    "metric_operation": "<",
+		                    "metric_value": 60,
+		                    "window_time": 30,
+		                    "window_function": "mean"
+		                }
+		            ],
+		            "policy-flag": {
+		                "pre-check-flag": [
+		                    "alarm-flag"
+		                ],
+		                "clear-flag": [
+		                    "alarm-flag"
+		                ]
+		            },
+		            "actions": [
+		                {
+		                    "type": "clear_alarm",
+		                    "parameters": {
+		                        "objectClass": "{ObjectClass}",
+		                        "eventType": 2,
+		                        "clearedType": "ADAC",
+		                        "eventId": 450003,
+		                        "eventName": "VMResourceOverload",
+		                        "perceivedSeverity": "Major",
+		                        "additionalInformation": "mem_usage bigger than 80"
+		                    }
+		                }
+		            ]
+		        }
+		    ]
+		},
+		{
+		    "name": "disk-loadavg",
+		    "enabled": true,
+		    "binding": {
+		        "tags":{
+		    		"app_guid": "service_mgr",
+		        	"node_id": "service_mgr_vm",
+		        	"instance_id": "service_mgr_vm_a4fb2"
+		    	},
+		    	"main_tag":"app_guid"
+		    },
+		    "rules": [
+		        {
+		            "name": "alarm",
+		            "cooldown": 10,
+		            "duration": 30,
+		            "conditions": [
+		                {
+		                    "metric_type": "disk_usage",
+		                    "metric_operation": ">",
+		                    "metric_value": 80,
+		                    "window_time": 30,
+		                    "window_function": "mean"
+		                }
+		            ],
+		            "policy-flag": {
+		                "set-flag": [
+		                    "alarm-flag"
+		                ]
+		            },
+		            "actions": [
+		                {
+		                    "type": "send_alarm",
+		                    "parameters": {
+		                        "objectClass": "{ObjectClass}",
+		                        "eventType": 2,
+		                        "clearedType": "ADAC",
+		                        "eventId": 450003,
+		                        "eventName": "VMResourceOverload",
+		                        "perceivedSeverity": "Major",
+		                        "additionalInformation": "disk_usage bigger than 80"
+		                    }
+		                }
+		            ]
+		        },
+		        {
+		            "name": "clear-alarm",
+		            "cooldown": 10,
+		            "duration": 30,
+		            "conditions": [
+		                {
+		                    "metric_type": "disk_usage",
+		                    "metric_operation": "<",
+		                    "metric_value": 60,
+		                    "window_time": 30,
+		                    "window_function": "mean"
+		                }
+		            ],
+		            "policy-flag": {
+		                "pre-check-flag": [
+		                    "alarm-flag"
+		                ],
+		                "clear-flag": [
+		                    "alarm-flag"
+		                ]
+		            },
+		            "actions": [
+		                {
+		                    "type": "clear_alarm",
+		                    "parameters": {
+		                        "objectClass": "{ObjectClass}",
+		                        "eventType": 2,
+		                        "clearedType": "ADAC",
+		                        "eventId": 450003,
+		                        "eventName": "VMResourceOverload",
+		                        "perceivedSeverity": "Major",
+		                        "additionalInformation": "disk_usage bigger than 80"
+		                    }
+		                }
+		            ]
+		        }
+		    ]
+		}
+	]
+}
+

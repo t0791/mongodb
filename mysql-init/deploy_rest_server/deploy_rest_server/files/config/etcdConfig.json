@@ -1,0 +1,7 @@
+{
+	"store_urls": [{{etcd_hosts}}],
+		"logger": {
+		"level": "DEBUG",
+		"file": "/var/paas/sys/log/monitPolicyClient/monitPolicyClient.log"
+	}
+}

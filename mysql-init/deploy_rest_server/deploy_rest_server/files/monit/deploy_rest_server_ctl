@@ -1,0 +1,61 @@
+#!/bin/bash
+
+RUN_DIR=/var/paas/sys/run/deploy_rest_server
+LOG_DIR=/var/paas/sys/log/deploy_rest_server
+PIDFILE=$RUN_DIR/deploy_rest_server.pid
+LOG_FILE=$LOG_DIR/deploy_rest_server.log
+BEEGO_LOG=/var/paas/jobs/deploy_rest_server/beego.log
+
+source /var/paas/common/utils/pid_utils.sh
+source /var/paas/common/utils/write_pid.sh
+
+case $1 in
+
+  start)
+    pid_guard $PIDFILE "deploy_rest_server"
+
+    mkdir -p $RUN_DIR
+    mkdir -p $LOG_DIR
+    chmod 640 ${LOG_FILE}
+    chmod -R 750 ${RUN_DIR}
+    chmod -R 750 ${LOG_DIR}
+
+    export LD_LIBRARY_PATH=/var/paas/jobs/deploy_rest_server/oracle/instantclient_12_1:$LD_LIBRARY_PATH
+    dir=`pwd`
+    cd /var/paas/jobs/deploy_rest_server
+    sleep 5
+    nohup ./deploy-rest-server 1>>${LOG_FILE} 2>&1 &
+    echo $! >  $PIDFILE
+    chmod 640 ${PIDFILE}
+    chmod 640 ${LOG_FILE} 
+    chmod 640 ${BEEGO_LOG}
+    find /var/paas -name "*.conf" -exec chmod 600 {} \; 
+    ;;
+
+  stop)
+   PIDS=(`ps -ef |grep "./deploy-rest-server"|grep -v grep|grep -v ctl|awk '{print $2}'`)
+
+    if [ ! -z "$PIDS" ]; then
+        for i in "${PIDS[@]}"
+        do
+           echo "kill process $PROC/$i"
+           kill -9  $i
+        done
+    fi
+
+    thread_num=1
+     while [ $thread_num -ne 0 ];do
+           thread_num=`ps -ef |grep "./deploy-rest-server"|grep -v grep|grep -v ctl|wc -l`
+           sleep 1
+    done
+
+    rm -f $PIDFILE
+    sleep 1
+    ;;
+
+  *)
+    echo "Usage: deploy_rest_server_ctl {start|stop}"
+
+    ;;
+
+esac
