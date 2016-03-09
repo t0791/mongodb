@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- readonly's default value is false -->
+<properties>
+    <!--country code-->
+    <property name="sys.country.code">86</property>
+
+    <!--apimgt domain-->
+    <property name="sys.apimgt.domain">www.apimgt.com</property>
+
+    <!--system accept language-->
+    <property name="sys.accept.language">en-us</property> <!--zh-cn or en-us-->
+
+    <!--system om username-->
+    <property name="sys.om.user" readonly="true">topus</property>
+
+    <!--sso type-->
+    <property name="sys.sso.type">sso.uim</property>
+
+    <!--fbb AS type-->
+    <property name="fbb.as.type">netopen</property>
+
+    <!--log env variable-->
+    <property name="sys.log.level">INFO</property>
+    <property name="sys.log.retention.cycle">30</property>  <!-- x/day -->
+    <property name="sys.log.runtime.dir.maxsize">5120</property>    <!-- x/MB -->
+    <property name="sys.log.operation.dir.maxsize">5120</property>  <!-- x/MB -->
+    <property name="sys.log.runtime.path">/log/topus/runtime_log/</property>
+    <property name="sys.log.operation.path">/log/topus/operation_log/</property>
+
+    <!--system level sla configuration-->
+    <property name="sys.sla.throttling">18000</property>    <!-- requests per minute -->
+    <property name="sys.sla.concurrence">12</property>
+
+    <!--dns server information-->
+    <property name="sys.dns.server.ip"></property>
+    <property name="sys.dns.server.port">53</property>
+
+    <!--backend lb information-->
+    <property name="backend.lb.ip" readonly="true">localhost</property>
+    <property name="backend.lb.http.port" readonly="true">7280</property>
+
+    <!--system backup server-->
+    <property name="sys.backup.policy">local</property>   <!-- local/remote -->
+    <property name="sys.backup.time">1:00</property>
+    <property name="sys.backup.local.path">/backup/topus/backup/</property>
+    <property name="sys.backup.local.path.maxsize">5120</property> <!-- x/MB -->
+    <property name="sys.backup.retention.cycle">5</property>  <!-- x/day -->
+    <property name="sys.backup.server.ip"></property>
+    <property name="sys.backup.server.port">22</property>
+    <property name="sys.backup.server.user"></property>
+    <property name="sys.backup.server.password"></property>
+    <property name="sys.backup.server.path"></property>
+
+    <!--statistics information-->
+    <property name="stat.time.interval">300</property>   <!-- x/second -->
+    <property name="stat.backup.policy">local</property> <!-- local/remote -->
+    <property name="stat.backup.local.path">/backup/topus/statistics</property>
+    <property name="stat.backup.retention.cycle">30</property>  <!-- x/day -->
+    <property name="stat.backup.server.ip"></property>
+    <property name="stat.backup.server.port">22</property>
+    <property name="stat.backup.server.user"></property>
+    <property name="stat.backup.server.password"></property>
+    <property name="stat.backup.server.path"></property>
+</properties>
+
