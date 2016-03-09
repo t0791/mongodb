@@ -1,0 +1,68 @@
+#!/bin/bash
+
+set -e -u -x
+
+RUN_DIR=/var/paas/sys/run/etcd
+PIDFILE=$RUN_DIR/etcd.pid
+STORE_DIR=/var/paas/store
+DATA_DIR=${STORE_DIR}/etcd
+LOG_DIR=/var/paas/sys/log/monit
+source /var/paas/scripts/utils/pid_utils.sh
+source /var/paas/scripts/utils/write_pid.sh
+
+
+mkdir -p $RUN_DIR
+mkdir -p $LOG_DIR
+mkdir -p $DATA_DIR
+MONIT_CTL_LOG_FILE=${LOG_DIR}/etcd_ctl.log
+touch ${MONIT_CTL_LOG_FILE}
+chmod 640 ${MONIT_CTL_LOG_FILE}
+
+listen_peer_url="http://<%= SINGLE_ETCD_IP %>:8001"
+listen_client_url="http://<%= SINGLE_ETCD_IP %>:5678"
+advertise_peer_url="http://<%= SINGLE_ETCD_IP %>:8001"
+advertise_client_url="http://<%= SINGLE_ETCD_IP %>:5678"
+
+case $1 in
+
+  start)
+    echo `date "+%F %T"` `whoami` "starting etcd..." >> ${MONIT_CTL_LOG_FILE}
+    pid_guard $PIDFILE "etcd"
+
+    chmod 750 $STORE_DIR
+    chmod 750 $DATA_DIR
+
+    # bump open file descriptor limit from default
+    sudo sh -c "ulimit -n 65536"
+
+    /var/paas/etcd/bin/etcd                                                            \
+        --name                        dns_etcd                                                  \
+        --data-dir                    ${DATA_DIR}                                               \
+        --heartbeat-interval          50                                                        \
+        --election-timeout            1000                                                      \
+        --listen-peer-urls            ${listen_peer_url}                                        \
+        --listen-client-urls          ${listen_client_url}                                      \
+        --initial-advertise-peer-urls ${advertise_peer_url}                                     \
+        --advertise-client-urls       ${advertise_client_url}                                   \
+        --initial-cluster             "dns_etcd=$advertise_peer_url"                            \
+        2>>${LOG_DIR}/etcd.stderr.log                                                           \
+        1>>${LOG_DIR}/etcd.stdout.log &
+
+    etcd_pid=$!
+    echo ${etcd_pid} > ${PIDFILE}
+    chmod 640 $PIDFILE
+
+    ;;
+
+  stop)
+    echo `date "+%F %T"` `whoami` "stopping etcd..." >> ${MONIT_CTL_LOG_FILE}
+    kill_and_wait $PIDFILE
+
+    ;;
+
+  *)
+    echo "Usage: etcd_ctl {start|stop}"
+
+    ;;
+
+esac

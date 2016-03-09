@@ -1,0 +1,5 @@
+check process nginx
+  with pidfile /var/paas/sys/run/nginx/nginx_server.pid
+  start program "/var/paas/jobs/nginx/bin/nginx_ctl start"
+  stop program "/var/paas/jobs/nginx/bin/nginx_ctl stop"
+

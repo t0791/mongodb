@@ -1,0 +1,77 @@
+#!/bin/bash
+
+JOB_DIR=/var/paas/jobs/deploy_rest_server
+RUN_DIR=/var/paas/sys/run/deploy_rest_server
+LOG_DIR=/var/paas/sys/log/deploy_rest_server
+PIDFILE=$RUN_DIR/deploy_rest_server.pid
+LOG_FILE=$LOG_DIR/deploy_rest_server.log
+MONIT_CTL_LOG_FILE=${LOG_DIR}/deploy_rest_server_ctl.log
+source /var/paas/scripts/utils/pid_utils.sh
+source /var/paas/scripts/utils/write_pid.sh
+
+case $1 in
+
+  start)
+    pid_guard $PIDFILE "deploy_rest_server"
+    PIDS=(`ps -ef |grep "./deploy-rest-server"|grep -v grep|grep -v ctl|grep -v cp|awk '{print $2}'`)
+
+    if [ ! -z "$PIDS" ]; then
+        for i in "${PIDS[@]}"
+        do
+           echo "kill process $PROC/$i"
+           kill -9  $i
+        done
+    fi
+
+    thread_num=1
+     while [ $thread_num -ne 0 ];do
+           thread_num=`ps -ef |grep "./deploy-rest-server"|grep -v grep|grep -v ctl|grep -v cp|wc -l`
+           sleep 1
+    done
+
+    rm -f $PIDFILE
+    sleep 1
+    mkdir -p $RUN_DIR
+    mkdir -p $LOG_DIR
+    chmod -R 750 ${RUN_DIR}
+    chmod -R 750 ${LOG_DIR}
+
+    export LD_LIBRARY_PATH=/var/paas/deploy_rest_server/oracle/instantclient_12_1:$LD_LIBRARY_PATH
+    dir=`pwd`
+    cd /var/paas/deploy_rest_server
+    echo `date "+%F %T"` `whoami` "starting deploy_rest_server..." >> ${MONIT_CTL_LOG_FILE}
+    nohup ./deploy-rest-server 1>> ${LOG_FILE} 2>&1 &
+    echo $! >  $PIDFILE
+    chmod 640 ${PIDFILE}
+    chmod 640 ${LOG_FILE}
+    chmod 640 ${MONIT_CTL_LOG_FILE}
+    cd $dir
+    ;;
+
+  stop)
+    echo `date "+%F %T"` `whoami` "stopping deploy_rest_server..." >> ${MONIT_CTL_LOG_FILE}
+    PIDS=(`ps -ef |grep "./deploy-rest-server"|grep -v grep|grep -v ctl|grep -v cp|awk '{print $2}'`)
+    if [ ! -z "$PIDS" ]; then
+        for i in "${PIDS[@]}"
+        do
+           echo "kill process $PROC/$i"
+           kill -9  $i
+        done
+    fi
+
+    thread_num=1
+     while [ $thread_num -ne 0 ];do
+           thread_num=`ps -ef |grep "./deploy-rest-server"|grep -v grep|grep -v ctl|grep -v cp|wc -l`
+           sleep 1
+    done
+
+    rm -f $PIDFILE
+    sleep 1
+    ;;
+
+  *)
+    echo "Usage: deploy_rest_server_ctl {start|stop}"
+
+    ;;
+
+esac

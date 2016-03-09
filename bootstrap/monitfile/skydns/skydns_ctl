@@ -1,0 +1,40 @@
+#!/bin/bash 
+JOB_DIR=/var/paas/jobs/skydns
+RUN_DIR=/var/paas/sys/run/skydns
+LOG_DIR=/var/paas/sys/log/skydns
+PIDFILE=$RUN_DIR/skydns.pid
+LOG_FILE=$LOG_DIR/skydns.log
+
+case $1 in
+
+  start)
+
+    mkdir -p $RUN_DIR
+    mkdir -p $LOG_DIR
+    chmod -R 750 ${JOB_DIR}
+    chmod -R 750 ${RUN_DIR}
+    chmod -R 750 ${LOG_DIR}
+
+    echo "Starting skydns in skydns." > ${LOG_FILE}
+    sudo setcap cap_net_bind_service=+ep /var/paas/skydns/bin/skydns
+    /var/paas/skydns/bin/skydns -machines="http://<%= SINGLE_ETCD_IP %>:5678" 1>${LOG_FILE} 2>&1 &
+    pidof skydns | cut -f 1 -d \ > $PIDFILE
+    chmod 640 ${PIDFILE}
+    chmod 640 ${LOG_FILE}
+    find /var/paas -name "*.log" -exec chmod 640 {} \;
+
+    find /var/vcap -name "*.log" -exec chmod 640 {} \;
+    ;;
+
+  stop)
+    PIDS=(`pidof skydns`)
+
+    kill -9 $PIDS
+
+    rm -f $PIDFILE
+    ;;
+
+  *)
+    echo "Usage: skydns_ctl {start|stop}"
+    ;;
+esac

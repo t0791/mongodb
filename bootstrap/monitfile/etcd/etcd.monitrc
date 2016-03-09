@@ -1,0 +1,7 @@
+check process etcd
+  with pidfile /var/paas/sys/run/etcd/etcd.pid
+  start program "/var/paas/jobs/etcd/bin/etcd_ctl start"
+    with timeout 60 seconds
+  stop program "/var/paas/jobs/etcd/bin/etcd_ctl stop"
+  group paas
+

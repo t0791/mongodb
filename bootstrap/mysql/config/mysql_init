@@ -1,0 +1,24 @@
+GRANT ALL PRIVILEGES ON *.* TO '<%= mysql_admin_username %>'@'<%= mysql_ip %>' IDENTIFIED BY '<%= mysql_admin_password %>' WITH MAX_QUERIES_PER_HOUR <%= mysql_max_queries_per_hour %> MAX_UPDATES_PER_HOUR <%= mysql_max_updates_per_hour %> MAX_CONNECTIONS_PER_HOUR <%= mysql_max_connections_per_hour %> MAX_USER_CONNECTIONS <%= mysql_max_user_connections %> GRANT OPTION;
+DELETE FROM mysql.user WHERE User='';
+DELETE FROM mysql.user WHERE User='root';
+
+
+INSERT IGNORE INTO mysql.user SET User='<%= mysql_eventbusdb_user %>';
+
+CREATE DATABASE IF NOT EXISTS <%= mysql_eventbusdb_name %>;
+
+GRANT ALL PRIVILEGES ON <%= mysql_eventbusdb_name %>.* TO '<%= mysql_eventbusdb_user %>'@'<%= om_ops_ip %>' IDENTIFIED BY '<%= mysql_eventbusdb_password %>' WITH MAX_QUERIES_PER_HOUR <%= mysql_max_queries_per_hour %> MAX_UPDATES_PER_HOUR <%= mysql_max_updates_per_hour %> MAX_CONNECTIONS_PER_HOUR <%= mysql_max_connections_per_hour %> MAX_USER_CONNECTIONS <%= mysql_max_user_connections %>;
+
+INSERT IGNORE INTO mysql.user SET User='<%= mysql_deploymgrdb_user %>';
+
+CREATE DATABASE IF NOT EXISTS <%= mysql_deploymgrdb_name %>;
+
+GRANT ALL PRIVILEGES ON <%= mysql_deploymgrdb_name %>.* TO '<%= mysql_deploymgrdb_user %>'@'<%= mysql_ip %>' IDENTIFIED BY '<%= mysql_deploymgrdb_password %>' WITH MAX_QUERIES_PER_HOUR <%= mysql_max_queries_per_hour %> MAX_UPDATES_PER_HOUR <%= mysql_max_updates_per_hour %> MAX_CONNECTIONS_PER_HOUR <%= mysql_max_connections_per_hour %> MAX_USER_CONNECTIONS <%= mysql_max_user_connections %>;
+
+USE <%= mysql_deploymgrdb_name %>;
+
+delete from mysql.user where length(password) = 0 or password is null;
+FLUSH PRIVILEGES;
+
+DROP DATABASE IF EXISTS test;
+

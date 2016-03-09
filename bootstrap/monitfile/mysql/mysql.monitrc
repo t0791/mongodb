@@ -1,0 +1,5 @@
+check process mysql
+  with pidfile <%= mysql.chroot_dir %>/mysql/var/vcap/sys/run/mysql/mysqld.pid
+  start program "/var/paas/jobs/mysql/bin/mysql_ctl start"
+  stop program "/var/paas/jobs/mysql/bin/mysql_ctl stop"
+

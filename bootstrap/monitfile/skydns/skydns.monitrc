@@ -1,0 +1,7 @@
+check process skydns
+  with pidfile /var/paas/sys/run/skydns/skydns.pid
+  start program "/var/paas/jobs/skydns/bin/skydns_ctl start"
+  stop program "/var/paas/jobs/skydns/bin/skydns_ctl stop"
+  if failed host <%= SKYDNS_IP %>  port 53  with timeout 30 seconds then restart
+  depends on etcd
+

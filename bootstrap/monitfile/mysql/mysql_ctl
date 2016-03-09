@@ -1,0 +1,171 @@
+#!/bin/bash
+
+mysql_user=mysql
+
+CHROOT_DIR=/var/paas/chroot/mysql
+JOB_DIR=/var/paas/jobs/mysql
+RUN_DIR=$CHROOT_DIR/var/vcap/sys/run/mysql
+LOG_DIR=$CHROOT_DIR/var/vcap/sys/log/mysql
+PIDFILE=$RUN_DIR/mysqld.pid
+MONIT_CTL_LOG_FILE=${LOG_DIR}/mysql_ctl.log
+ERRLOG_FILE=$LOG_DIR/mysqld.err.log
+AUDIT_LOG=$LOG_DIR/audit.log
+SETUP_LOG_DIR=/var/vcap/sys/log/mysql
+SETUP_LOG=/var/vcap/sys/log/mysql/mysql_setup.log
+SOCK_FILE=$CHROOT_DIR/var/vcap/packages/mysql/mysqld.sock
+
+source /var/paas/scripts/utils/pid_utils.sh
+source /var/paas/scripts/utils/write_pid.sh
+
+# Default value, in seconds, afterwhich the script should timeout waiting
+# for server start.
+# Value here is overriden by value in my.cnf.
+# 0 means don't wait at all
+# Negative numbers mean to wait indefinitely
+service_startup_timeout=900
+
+log_success_msg()
+{
+  echo " SUCCESS! $@"
+}
+
+log_failure_msg()
+{
+  echo " ERROR! $@"
+}
+
+case `echo "testing\c"`,`echo -n testing` in
+    *c*,-n*) echo_n=   echo_c=     ;;
+    *c*,*)   echo_n=-n echo_c=     ;;
+    *)       echo_n=   echo_c='\c' ;;
+esac
+
+wait_for_pid () {
+  verb="$1"           # created | removed
+  pid="$2"            # process ID of the program operating on the pid-file
+  pid_file_path="$3" # path to the PID file.
+
+  i=0
+  avoid_race_condition="by checking again"
+
+  while test $i -ne $service_startup_timeout ; do
+
+    case "$verb" in
+      'created')
+        # wait for a PID-file to pop into existence.
+        test -s "$pid_file_path" && i='' && break
+        ;;
+      'removed')
+        # wait for this PID-file to disappear
+        test ! -s "$pid_file_path" && i='' && break
+        ;;
+      *)
+        echo "wait_for_pid () usage: wait_for_pid created|removed pid pid_file_path"
+        exit 1
+        ;;
+    esac
+
+    # if server isn't running, then pid-file will never be updated
+    if test -n "$pid"; then
+      if sudo kill -0 "$pid" 2>/dev/null; then
+        :  # the server still runs
+      else
+        # The server may have exited between the last pid-file check and now.
+        if test -n "$avoid_race_condition"; then
+          avoid_race_condition=""
+          continue  # Check again.
+        fi
+
+        # there's nothing that will affect the file.
+        log_failure_msg "The server quit without updating PID file ($pid_file_path)."
+        return 1  # not waiting any more.
+      fi
+    fi
+
+    echo $echo_n ".$echo_c"
+    i=`expr $i + 1`
+    sleep 1
+
+  done
+
+  if test -z "$i" ; then
+    log_success_msg
+    return 0
+  else
+    log_failure_msg
+    return 1
+  fi
+}
+
+case $1 in
+
+  start)
+
+    sudo mkdir -p $RUN_DIR
+    sudo mkdir -p $LOG_DIR
+    sudo chown -R ${mysql_user}:paas $CHROOT_DIR/var/vcap/sys
+    sudo chmod -R 750 $CHROOT_DIR/var/vcap/sys
+    #sudo chown -R ${mysql_user}:paas $LOG_DIR
+    chmod -R 750 ${JOB_DIR}
+    sudo chmod -R 750 ${RUN_DIR}
+    sudo chmod -R 750 ${LOG_DIR}
+    sudo chmod  -R g-rwx,o-rwx ${JOB_DIR}
+    mkdir -p ${SETUP_LOG_DIR}
+    $0 stop;
+    sleep 2
+	result=`grep "umask 077" /home/paas/.bashrc |wc -l`
+	if [ $result -eq 0 ]; then
+	echo 'umask 077' >> /home/paas/.bashrc
+	fi
+    source /home/paas/.bashrc
+    export UMASK=0600
+    export UMASK_DIR=0700
+
+    # Don't use system files, if any exist in the system
+    if [ -f /etc/debian_version ]; then
+      sudo rm -rf /etc/mysql/
+    elif [ -f /etc/euleros-release ]; then
+      sudo rm -rf /etc/my.cnf*
+    fi
+
+    # Safeguard (relative paths, core dumps..)
+    cd $CHROOT_DIR/var/vcap/packages/mysql
+
+    echo $echo_n "Starting MySQL"
+    sudo $CHROOT_DIR/var/vcap/packages/mysql/bin/mysqld_safe 1>${SETUP_LOG} 2>&1 &
+
+    wait_for_pid created "$!" "$PIDFILE"; return_value=$?
+
+    sudo chown ${mysql_user}:paas ${PIDFILE}
+    sudo chmod 640 ${PIDFILE} ${ERRLOG_FILE} ${SOCK_FILE} ${AUDIT_LOG}
+    sudo rm -rf /var/vcap/packages/mysql
+    exit $return_value
+    ;;
+
+  stop)
+    if test -s "$PIDFILE"
+    then
+      mysqld_pid=`cat "$PIDFILE"`
+
+      if (sudo kill -0 $mysqld_pid 2>/dev/null)
+      then
+        echo $echo_n "Shutting down MySQL"
+        sudo kill $mysqld_pid
+        # mysqld should remove the pid file when it exits, so wait for it.
+        wait_for_pid removed "$mysqld_pid" "$PIDFILE"; return_value=$?
+      else
+        log_failure_msg "MySQL server process #$mysqld_pid is not running!"
+      fi
+
+      sudo rm -f "$PIDFILE"
+    fi
+
+    sudo chpst -u $mysql_user pkill mysql
+    ;;
+
+  *)
+    echo "Usage: mysql_ctl {start|stop}"
+
+    ;;
+
+esac

@@ -1,0 +1,64 @@
+[client]
+port = {mysql_port}
+socket = /var/vcap/packages/mysql/mysqld.sock
+[mysqld_safe]
+nice = 0
+
+[mysqld]
+secure_auth=1
+skip-symbolic-links=1
+local-infile = 0
+safe-user-create = 1
+chroot=<%= mysql.chroot_dir %>/mysql
+secure_file_priv = /var/vcap/store/mysql 
+log_warnings = 2
+plugin-load=validate_password.so
+validate-password=FORCE_PLUS_PERMANENT
+bind-address = <%= bindaddress %>
+collation_server = utf8_unicode_ci
+character_set_server = utf8
+user = paas
+socket = /var/vcap/packages/mysql/mysqld.sock
+#user mysql must have the permission to write to mysqld.sock's upper directory
+port = {mysql_port}
+tmpdir = /var/vcap/packages/mysql/tmp
+basedir = /var/vcap/packages/mysql
+datadir = /var/vcap/store/mysql
+language = /var/vcap/packages/mysql/share/english
+pid-file = /var/vcap/sys/run/mysql/mysqld.pid
+log-error = <%= mysql.chroot_dir %>/mysql/var/vcap/sys/log/mysql/mysqld.err.log
+log-bin = /var/vcap/store/mysql-logs/mysql-bin
+log-bin-index = /var/vcap/store/mysql-logs/mysql-bin.index
+plugin-dir=/var/vcap/packages/mysql/lib/plugin
+init-file = /var/vcap/packages/mysql/config/mysql_init
+skip-external-locking
+innodb_file_per_table
+innodb_log_file_size = "<%= innodb_log_file_size %>"
+sql-mode = NO_AUTO_CREATE_USER
+expire_logs_days = <%= expire_logs_days %>
+
+# These are required to make the quota enforcer work
+innodb_stats_on_metadata = ON
+innodb_stats_persistent = OFF
+interactive_timeout = <%= mysql_interactive_timeout %>
+wait_timeout = <%= mysql_wait_timeout %>
+max_connections = 1500
+
+# Configuration for audit log
+plugin-load-add=audit_log=audit_log.so
+audit-log=FORCE_PLUS_PERMANENT
+audit_log_policy=<%= audit_log_policy %>
+audit_log_format=<%= audit_log_format %>
+audit_log_file=<%= audit_log_file %>
+audit_log_rotate_on_size=<%= audit_log_rotate_on_size %>
+audit_log_rotations=<%= audit_log_rotations %>
+
+[mysqldump]
+quick
+quote-names
+max_allowed_packet = 256M
+
+[mysql]
+
+[isamchk]
+key_buffer = 16M
