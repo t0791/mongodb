@@ -1,0 +1,9 @@
+INSERT IGNORE INTO mysql.user SET User='<%= mysql.admin_username %>';
+GRANT ALL PRIVILEGES ON *.* TO '<%= mysql.admin_username %>'@'<%= mysql_ip %>' IDENTIFIED BY '<%= mysql.admin_password %>' WITH MAX_QUERIES_PER_HOUR <%= mysql_max_queries_per_hour %> MAX_UPDATES_PER_HOUR <%= mysql_max_updates_per_hour %> MAX_CONNECTIONS_PER_HOUR <%= mysql_max_connections_per_hour %> MAX_USER_CONNECTIONS <%= mysql_max_user_connections %> GRANT OPTION;
+DELETE FROM mysql.user WHERE User='';
+delete from mysql.user where length(password) = 0 or password is null;
+DELETE FROM mysql.user WHERE User='root';
+FLUSH PRIVILEGES;
+
+DROP DATABASE IF EXISTS test;
+
